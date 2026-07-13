@@ -260,6 +260,7 @@
     body.shared-mode.has-response .edit-only { display: none; }
     body.shared-mode.has-response .view-only { display: block; }
     body.shared-mode.has-response .recipient-only { display: none; }
+    body.shared-mode.has-response .clear-action { display: none; }
     body.shared-mode.no-response .edit-only { display: block; }
     body.shared-mode.no-response .view-only { display: none; }
     body.shared-mode .detail-item:hover { transform: none; }
@@ -405,7 +406,7 @@
     </p>
 
     <!-- ========== 创建者操作 ========== -->
-    <section class="creator-only mb-8">
+    <section class="creator-only mb-4">
       <button
         id="btnConfirm"
         type="button"
@@ -414,6 +415,16 @@
         ✨ 答应约会并分享给对方
       </button>
     </section>
+
+    <p class="clear-action text-center mb-8">
+      <button
+        id="btnClear"
+        type="button"
+        class="text-text-soft/50 text-xs underline underline-offset-2 hover:text-lavender-deep transition-colors"
+      >
+        清除已填内容，重新填写
+      </button>
+    </p>
 
     <!-- ========== 被分享者：选择交互区 ========== -->
     <section class="recipient-only mt-auto mb-4">
@@ -572,6 +583,7 @@
     const btnAccept = document.getElementById('btnAccept');
     const btnReject = document.getElementById('btnReject');
     const btnConfirm = document.getElementById('btnConfirm');
+    const btnClear = document.getElementById('btnClear');
     const btnConfirmClose = document.getElementById('btnConfirmClose');
     const btnConfirmToShare = document.getElementById('btnConfirmToShare');
     const btnCopyLink = document.getElementById('btnCopyLink');
@@ -900,6 +912,30 @@
       }
     }
 
+    function resetToCreatorMode() {
+      isSharedMode = false;
+      currentResponse = { status: null, at: null };
+      document.body.classList.remove('shared-mode', 'has-response', 'no-response');
+    }
+
+    function clearAllFields() {
+      fields.date.value = '';
+      fields.time.value = '';
+      fields.location.value = '';
+      fields.locationNote.value = '';
+      Object.values(activityChecks).forEach(el => { el.checked = false; });
+      inputCustomActivity.value = '';
+      syncCustomActivityInput();
+      syncPreview();
+    }
+
+    function clearFilledContent() {
+      clearAllFields();
+      localStorage.removeItem(STORAGE_KEY);
+      resetToCreatorMode();
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+
     /* --- 保存 / 读取本地缓存（仅创建者模式） --- */
     function saveFields() {
       if (isSharedMode) return;
@@ -918,6 +954,9 @@
     btnConfirm.addEventListener('click', () => {
       renderConfirmPreview();
       openModal('modalConfirmPreview');
+    });
+    btnClear.addEventListener('click', () => {
+      if (confirm('确定清除所有已填内容吗？')) clearFilledContent();
     });
     btnShareReply.addEventListener('click', () => openShareModal(true));
     btnConfirmClose.addEventListener('click', () => closeModal('modalConfirmPreview'));
