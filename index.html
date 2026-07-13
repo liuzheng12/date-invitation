@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>和我赴一场晚霞约会吧</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            /* 【修改颜色】主色调 - 浅紫 */
+            lavender: '#C4B5FD',
+            'lavender-light': '#E9D5FF',
+            'lavender-deep': '#A78BFA',
+            /* 【修改颜色】辅助色 - 米白/暖白 */
+            cream: '#FFF8F0',
+            'cream-warm': '#FDF4E8',
+            /* 【修改颜色】文字色 */
+            'text-soft': '#6B5B7A',
+            'text-deep': '#4A3F5C',
+          },
+          fontFamily: {
+            sans: ['"Hiragino Sans GB"', '"PingFang SC"', '"Microsoft YaHei"', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    /* ========== 全局样式 ========== */
+    * { box-sizing: border-box; }
+
+    body {
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 页面加载淡入 */
+    .page-enter {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: pageFadeIn 1.2s ease-out forwards;
+    }
+
+    @keyframes pageFadeIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 背景缓慢浮动光晕 */
+    .glow-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(60px);
+      pointer-events: none;
+      z-index: 0;
+      animation: floatGlow 8s ease-in-out infinite;
+    }
+
+    .glow-orb-1 {
+      width: 280px; height: 280px;
+      background: rgba(196, 181, 253, 0.45);
+      top: -80px; right: -60px;
+      animation-delay: 0s;
+    }
+
+    .glow-orb-2 {
+      width: 220px; height: 220px;
+      background: rgba(253, 244, 232, 0.7);
+      bottom: 10%; left: -50px;
+      animation-delay: -3s;
+    }
+
+    .glow-orb-3 {
+      width: 180px; height: 180px;
+      background: rgba(167, 139, 250, 0.3);
+      top: 40%; right: 10%;
+      animation-delay: -5s;
+    }
+
+    @keyframes floatGlow {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(15px, -20px) scale(1.05); }
+      66% { transform: translate(-10px, 15px) scale(0.95); }
+    }
+
+    /* 卡片玻璃质感 */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      box-shadow: 0 8px 32px rgba(167, 139, 250, 0.12);
+    }
+
+    /* 按钮 hover 放大 */
+    .btn-interactive {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .btn-interactive:hover {
+      transform: scale(1.06);
+    }
+    .btn-interactive:active {
+      transform: scale(0.98);
+    }
+
+    /* 拒绝按钮晃动 */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px) rotate(-1deg); }
+      40% { transform: translateX(8px) rotate(1deg); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+    .btn-shake {
+      animation: shake 0.5s ease-in-out;
+    }
+
+    /* 星星飘落动画 */
+    .star-particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 100;
+      animation: starFall linear forwards;
+      font-size: 1rem;
+      opacity: 0;
+    }
+
+    @keyframes starFall {
+      0% {
+        opacity: 1;
+        transform: translateY(-10vh) rotate(0deg) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(110vh) rotate(360deg) scale(0.5);
+      }
+    }
+
+    /* 弹窗动画 */
+    .modal-overlay {
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-content {
+      transform: scale(0.85) translateY(20px);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+    }
+    .modal-overlay.active .modal-content {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+
+    /* 装饰性分隔线 */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.4), transparent);
+    }
+
+    /* 详情项图标动画 */
+    .detail-item {
+      transition: transform 0.3s ease;
+    }
+    .detail-item:hover {
+      transform: translateX(4px);
+    }
+
+    /* 标题装饰 */
+    .title-sparkle {
+      display: inline-block;
+      animation: sparkle 2s ease-in-out infinite;
+    }
+    @keyframes sparkle {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* 【可填写字段】输入框样式 */
+    .field-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(167, 139, 250, 0.25);
+      border-radius: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      color: #4A3F5C;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .field-input:focus {
+      border-color: rgba(167, 139, 250, 0.6);
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+    }
+    .field-input::placeholder {
+      color: rgba(107, 91, 122, 0.45);
+    }
+    .field-input[type="date"] {
+      color-scheme: light;
+    }
+    .field-input:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* 【可填写字段】多选框样式 */
+    .activity-option {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      padding: 0.625rem 0.75rem;
+      background: rgba(255, 255, 255, 0.45);
+      border: 1px solid rgba(167, 139, 250, 0.2);
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .activity-option:has(input[type="checkbox"]:checked) {
+      border-color: rgba(167, 139, 250, 0.5);
+      background: rgba(255, 255, 255, 0.78);
+    }
+    .activity-option input[type="checkbox"] {
+      accent-color: #A78BFA;
+      width: 1rem;
+      height: 1rem;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .activity-option span {
+      font-size: 0.875rem;
+      color: #4A3F5C;
+    }
+    .activity-custom {
+      cursor: default;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    .activity-custom .field-input {
+      flex: 1;
+      min-width: 0;
+      padding: 0.375rem 0.625rem;
+    }
+
+    /* 创建者 / 被分享者模式 */
+    .edit-only { display: block; }
+    .view-only { display: none; }
+    .creator-only { display: block; }
+    .recipient-only { display: none; }
+    body.shared-mode .creator-only { display: none; }
+    body.shared-mode .recipient-only { display: block; }
+    body.shared-mode .edit-only { display: none; }
+    body.shared-mode .view-only { display: block; }
+    body.shared-mode .detail-item:hover { transform: none; }
+
+    /* 分享链接输入框 */
+    .share-link-input {
+      font-size: 0.75rem;
+      word-break: break-all;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-cream via-lavender-light/30 to-cream-warm font-sans text-text-deep">
+
+  <!-- ========== 背景光晕层 ========== -->
+  <div class="glow-orb glow-orb-1"></div>
+  <div class="glow-orb glow-orb-2"></div>
+  <div class="glow-orb glow-orb-3"></div>
+
+  <!-- ========== 星星飘落容器 ========== -->
+  <div id="starContainer"></div>
+
+  <!-- ========== 主内容区 ========== -->
+  <main class="relative z-10 page-enter px-5 py-10 sm:py-16 max-w-md mx-auto min-h-screen flex flex-col">
+
+    <!-- 【修改文字】封面标题区 -->
+    <header class="text-center mb-8 sm:mb-10">
+      <p class="text-lavender-deep/70 text-sm tracking-[0.3em] mb-3 font-light">— INVITATION —</p>
+      <h1 class="text-2xl sm:text-3xl font-medium leading-relaxed text-text-deep">
+        <span class="title-sparkle">✦</span>
+        和我赴一场晚霞约会吧
+        <span class="title-sparkle">✦</span>
+      </h1>
+      <div class="divider w-24 mx-auto mt-5"></div>
+    </header>
+
+    <!-- 【修改文字】开篇温柔短句 -->
+    <section class="glass-card rounded-3xl p-6 sm:p-8 mb-6 text-center">
+      <p class="text-text-soft text-base sm:text-lg leading-loose">
+        吃醋大王，<br>
+        <span class="text-lavender-deep font-medium">要一起去散步吗？</span>
+      </p>
+      <p class="text-text-soft/60 text-xs sm:text-sm mt-4 leading-relaxed">
+        想把黄昏的温柔，和晚风的轻语，<br>都分享给你。
+      </p>
+    </section>
+
+    <!-- 【可填写】约会详情板块 -->
+    <section class="glass-card rounded-3xl p-6 sm:p-8 mb-4 sm:mb-6">
+      <h2 class="text-center text-sm tracking-widest text-lavender-deep/80 mb-5 font-medium">
+        ✿ 约会详情 ✿
+      </h2>
+
+      <!-- 【填写】约会日期 -->
+      <div class="detail-item flex items-start gap-4 mb-5 pb-5 border-b border-lavender/20">
+        <span class="text-xl shrink-0">📅</span>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs text-text-soft/70 mb-1.5">约会日期</p>
+          <!-- 编辑模式（创建者） -->
+          <div class="edit-only space-y-2">
+            <input type="date" id="inputDate" class="field-input">
+            <input type="text" id="inputTime" class="field-input" placeholder="例如：下午 4:00 出发" value="">
+          </div>
+          <!-- 只读展示（被分享者） -->
+          <div class="view-only">
+            <p id="viewDate" class="text-text-deep font-medium">日期待定</p>
+            <p id="viewTime" class="text-text-soft text-sm mt-0.5">时间待定</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 【填写】见面地点 -->
+      <div class="detail-item flex items-start gap-4 mb-5 pb-5 border-b border-lavender/20">
+        <span class="text-xl shrink-0">📍</span>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs text-text-soft/70 mb-1.5">见面地点</p>
+          <div class="edit-only space-y-2">
+            <input type="text" id="inputLocation" class="field-input" placeholder="例如：滨江公园 · 落日观景台" value="">
+            <input type="text" id="inputLocationNote" class="field-input" placeholder="补充说明（选填）" value="">
+          </div>
+          <div class="view-only">
+            <p id="viewLocation" class="text-text-deep font-medium">地点待定</p>
+            <p id="viewLocationNote" class="text-text-soft text-sm mt-0.5"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 【填写】约会项目 -->
+      <div class="detail-item flex items-start gap-4">
+        <span class="text-xl shrink-0">🌸</span>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs text-text-soft/70 mb-1.5">约会项目</p>
+          <div class="edit-only space-y-2">
+            <!-- 【填写】预设约会项目（多选） -->
+            <label class="activity-option">
+              <input type="checkbox" id="chkEat" value="吃饭">
+              <span>吃饭</span>
+            </label>
+            <label class="activity-option">
+              <input type="checkbox" id="chkKart" value="开卡丁车">
+              <span>开卡丁车</span>
+            </label>
+            <label class="activity-option">
+              <input type="checkbox" id="chkCraft" value="做手工">
+              <span>做手工</span>
+            </label>
+            <label class="activity-option">
+              <input type="checkbox" id="chkBar" value="酒馆小酌">
+              <span>酒馆小酌</span>
+            </label>
+            <label class="activity-option">
+              <input type="checkbox" id="chkComedy" value="看脱口秀">
+              <span>看脱口秀</span>
+            </label>
+            <!-- 【填写】自定义项目：默认不勾选，输入框为空 -->
+            <div class="activity-option activity-custom">
+              <input type="checkbox" id="chkCustom">
+              <input type="text" id="inputCustomActivity" class="field-input" placeholder="其他项目（手动填写）" value="" disabled>
+            </div>
+          </div>
+          <ul id="viewActivities" class="view-only text-text-deep font-medium space-y-1.5"></ul>
+        </div>
+      </div>
+    </section>
+
+    <p id="editHint" class="creator-only text-center text-text-soft/50 text-xs mb-6">
+      填写完成后点击「确认」预览，再点「分享」生成链接发给 TA ♡
+    </p>
+
+    <!-- ========== 创建者操作：确认 & 分享 ========== -->
+    <section class="creator-only mb-8">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button
+          id="btnConfirm"
+          type="button"
+          class="btn-interactive flex-1 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-lavender-deep to-lavender text-white font-medium text-sm shadow-lg shadow-lavender/25"
+        >
+          ✓ 确认
+        </button>
+        <button
+          id="btnShare"
+          type="button"
+          class="btn-interactive flex-1 py-3.5 px-6 rounded-2xl bg-white/85 text-lavender-deep font-medium text-sm border border-lavender/40 hover:bg-white"
+        >
+          🔗 分享
+        </button>
+      </div>
+    </section>
+
+    <!-- ========== 被分享者：选择交互区 ========== -->
+    <section class="recipient-only mt-auto mb-0">
+      <p class="text-center text-text-soft text-sm mb-5">你的答案是…？</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <!-- 答应约会按钮 -->
+        <button
+          id="btnAccept"
+          class="btn-interactive flex-1 py-4 px-6 rounded-2xl bg-gradient-to-r from-lavender-deep to-lavender text-white font-medium text-base shadow-lg shadow-lavender/30 hover:shadow-xl hover:shadow-lavender/40"
+        >
+          ✨ 答应约会
+        </button>
+        <!-- 拒绝约会按钮 -->
+        <button
+          id="btnReject"
+          class="btn-interactive flex-1 py-4 px-6 rounded-2xl bg-white/80 text-text-soft font-medium text-base border border-lavender/30 hover:bg-white hover:border-lavender/50"
+        >
+          再想想…
+        </button>
+      </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="text-center mt-10 text-text-soft/40 text-xs">
+      made with ♡ for you
+    </footer>
+  </main>
+
+  <!-- ========== 弹窗：确认预览 ========== -->
+  <div id="modalConfirmPreview" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/20 backdrop-blur-sm">
+    <div class="modal-content glass-card rounded-3xl p-6 sm:p-8 max-w-sm w-full">
+      <h3 class="text-center text-lg font-medium text-text-deep mb-1">邀请函预览</h3>
+      <p class="text-center text-text-soft/60 text-xs mb-5">确认以下内容无误</p>
+      <div id="confirmPreviewBody" class="space-y-4 text-sm"></div>
+      <div class="flex gap-3 mt-6">
+        <button
+          id="btnConfirmClose"
+          type="button"
+          class="btn-interactive flex-1 py-3 rounded-xl bg-white/80 text-text-soft text-sm border border-lavender/30"
+        >
+          继续编辑
+        </button>
+        <button
+          id="btnConfirmToShare"
+          type="button"
+          class="btn-interactive flex-1 py-3 rounded-xl bg-gradient-to-r from-lavender-deep to-lavender text-white text-sm font-medium"
+        >
+          去分享
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 弹窗：分享链接 ========== -->
+  <div id="modalShare" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/20 backdrop-blur-sm">
+    <div class="modal-content glass-card rounded-3xl p-6 sm:p-8 max-w-sm w-full">
+      <h3 class="text-center text-lg font-medium text-text-deep mb-1">分享邀请函</h3>
+      <p class="text-center text-text-soft/60 text-xs mb-4">复制链接发给 TA，对方打开即可看到内容</p>
+      <input
+        id="shareLinkInput"
+        type="text"
+        readonly
+        class="field-input share-link-input mb-3"
+      >
+      <p id="shareTip" class="text-text-soft/50 text-xs mb-4 leading-relaxed">
+        提示：跨设备分享需先将页面部署到网络（如 GitHub Pages），再复制链接。
+      </p>
+      <div class="flex gap-3">
+        <button
+          id="btnCopyLink"
+          type="button"
+          class="btn-interactive flex-1 py-3 rounded-xl bg-gradient-to-r from-lavender-deep to-lavender text-white text-sm font-medium"
+        >
+          复制链接
+        </button>
+        <button
+          id="btnShareNative"
+          type="button"
+          class="btn-interactive flex-1 py-3 rounded-xl bg-white/80 text-text-soft text-sm border border-lavender/30"
+        >
+          系统分享
+        </button>
+      </div>
+      <button
+        id="btnShareClose"
+        type="button"
+        class="btn-interactive w-full mt-3 py-2.5 text-text-soft/60 text-xs"
+      >
+        关闭
+      </button>
+    </div>
+  </div>
+
+  <!-- ========== 弹窗：答应约会 ========== -->
+  <div id="modalAccept" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/20 backdrop-blur-sm">
+    <div class="modal-content glass-card rounded-3xl p-8 sm:p-10 max-w-sm w-full text-center">
+      <div class="text-4xl mb-4">🌅</div>
+      <!-- 【修改文字】答应弹窗文案 -->
+      <h3 class="text-xl font-medium text-text-deep mb-3">期待与你相见</h3>
+      <p class="text-text-soft text-sm leading-relaxed mb-6">
+        那就说定了哦～<br>
+        我会带着晚霞和星星，在约定的地方等你。
+      </p>
+      <button
+        onclick="closeModal('modalAccept')"
+        class="btn-interactive py-3 px-8 rounded-xl bg-gradient-to-r from-lavender-deep to-lavender text-white text-sm font-medium"
+      >
+        好呀 ♡
+      </button>
+    </div>
+  </div>
+
+  <!-- ========== 弹窗：拒绝挽留 ========== -->
+  <div id="modalReject" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/20 backdrop-blur-sm">
+    <div class="modal-content glass-card rounded-3xl p-8 sm:p-10 max-w-sm w-full text-center">
+      <div class="text-4xl mb-4">🥺</div>
+      <!-- 【修改文字】拒绝挽留文案 -->
+      <h3 class="text-xl font-medium text-text-deep mb-3">真的不考虑一下吗？</h3>
+      <p class="text-text-soft text-sm leading-relaxed mb-6">
+        晚霞只有一次，但和你在一起的时光<br>
+        可以有很多很多个。<br>
+        <span class="text-lavender-deep">再给我一次机会嘛～</span>
+      </p>
+      <div class="flex gap-3 justify-center">
+        <button
+          onclick="closeModal('modalReject'); handleAccept();"
+          class="btn-interactive py-3 px-6 rounded-xl bg-gradient-to-r from-lavender-deep to-lavender text-white text-sm font-medium"
+        >
+          好吧，我去！
+        </button>
+        <button
+          onclick="closeModal('modalReject')"
+          class="btn-interactive py-3 px-6 rounded-xl bg-white/80 text-text-soft text-sm border border-lavender/30"
+        >
+          下次再说
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== JavaScript 交互逻辑 ========== -->
+  <script>
+    /* --- 元素引用 --- */
+    const btnAccept = document.getElementById('btnAccept');
+    const btnReject = document.getElementById('btnReject');
+    const btnConfirm = document.getElementById('btnConfirm');
+    const btnShare = document.getElementById('btnShare');
+    const btnConfirmClose = document.getElementById('btnConfirmClose');
+    const btnConfirmToShare = document.getElementById('btnConfirmToShare');
+    const btnCopyLink = document.getElementById('btnCopyLink');
+    const btnShareNative = document.getElementById('btnShareNative');
+    const btnShareClose = document.getElementById('btnShareClose');
+    const confirmPreviewBody = document.getElementById('confirmPreviewBody');
+    const shareLinkInput = document.getElementById('shareLinkInput');
+    const starContainer = document.getElementById('starContainer');
+
+    const fields = {
+      date: document.getElementById('inputDate'),
+      time: document.getElementById('inputTime'),
+      location: document.getElementById('inputLocation'),
+      locationNote: document.getElementById('inputLocationNote'),
+    };
+
+    const activityChecks = {
+      eat: document.getElementById('chkEat'),
+      kart: document.getElementById('chkKart'),
+      craft: document.getElementById('chkCraft'),
+      bar: document.getElementById('chkBar'),
+      comedy: document.getElementById('chkComedy'),
+      custom: document.getElementById('chkCustom'),
+    };
+    const inputCustomActivity = document.getElementById('inputCustomActivity');
+
+    const views = {
+      date: document.getElementById('viewDate'),
+      time: document.getElementById('viewTime'),
+      location: document.getElementById('viewLocation'),
+      locationNote: document.getElementById('viewLocationNote'),
+      activities: document.getElementById('viewActivities'),
+    };
+
+    const STORAGE_KEY = 'dateInvitationDetails_v3';
+    let isSharedMode = false;
+
+    const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+    /* --- 星星符号池 --- */
+    const starSymbols = ['✦', '✧', '★', '☆', '✨', '♡', '🌸'];
+
+    /* --- 收集 / 应用邀请函数据 --- */
+    function getInvitationData() {
+      return {
+        date: fields.date.value,
+        time: fields.time.value.trim(),
+        location: fields.location.value.trim(),
+        locationNote: fields.locationNote.value.trim(),
+        activities: {
+          eat: activityChecks.eat.checked,
+          kart: activityChecks.kart.checked,
+          craft: activityChecks.craft.checked,
+          bar: activityChecks.bar.checked,
+          comedy: activityChecks.comedy.checked,
+          custom: activityChecks.custom.checked,
+          customText: inputCustomActivity.value.trim(),
+        },
+      };
+    }
+
+    function applyInvitationData(data) {
+      if (!data) return;
+      fields.date.value = data.date || '';
+      fields.time.value = data.time || '';
+      fields.location.value = data.location || '';
+      fields.locationNote.value = data.locationNote || '';
+
+      if (data.activities) {
+        activityChecks.eat.checked = !!data.activities.eat;
+        activityChecks.kart.checked = !!data.activities.kart;
+        activityChecks.craft.checked = !!data.activities.craft;
+        activityChecks.bar.checked = !!data.activities.bar;
+        activityChecks.comedy.checked = !!data.activities.comedy;
+        activityChecks.custom.checked = !!data.activities.custom;
+        inputCustomActivity.value = data.activities.customText || '';
+      }
+
+      syncCustomActivityInput();
+      syncPreview();
+    }
+
+    /* --- 分享链接编解码 --- */
+    function encodeSharePayload(data) {
+      return btoa(unescape(encodeURIComponent(JSON.stringify(data))))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function decodeSharePayload(str) {
+      let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+      while (base64.length % 4) base64 += '=';
+      return JSON.parse(decodeURIComponent(escape(atob(base64))));
+    }
+
+    function buildShareUrl(data) {
+      const payload = encodeSharePayload(data || getInvitationData());
+      const base = location.href.split('#')[0];
+      return `${base}#invite=${payload}`;
+    }
+
+    function parseShareFromUrl() {
+      const hash = location.hash.slice(1);
+      if (!hash) return false;
+      const params = new URLSearchParams(hash);
+      const invite = params.get('invite');
+      if (!invite) return false;
+
+      try {
+        applyInvitationData(decodeSharePayload(invite));
+        enterSharedMode();
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function enterSharedMode() {
+      isSharedMode = true;
+      document.body.classList.add('shared-mode');
+      syncPreview();
+    }
+
+    /* --- 日期格式化 --- */
+    function formatDate(dateStr) {
+      if (!dateStr) return '日期待定';
+      const d = new Date(dateStr + 'T12:00:00');
+      if (isNaN(d.getTime())) return '日期待定';
+      return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 · ${weekDays[d.getDay()]}`;
+    }
+
+    /* --- 获取已选约会项目 --- */
+    function getSelectedActivities() {
+      const items = Object.values(activityChecks)
+        .filter(el => el !== activityChecks.custom && el.checked)
+        .map(el => el.value);
+
+      if (activityChecks.custom.checked) {
+        const customText = inputCustomActivity.value.trim();
+        if (customText) items.push(customText);
+      }
+      return items;
+    }
+
+    /* --- 自定义项目输入框启用状态 --- */
+    function syncCustomActivityInput() {
+      const enabled = activityChecks.custom.checked;
+      inputCustomActivity.disabled = !enabled;
+      if (!enabled) inputCustomActivity.value = '';
+    }
+
+    /* --- 同步输入到只读展示区 --- */
+    function syncPreview() {
+      views.date.textContent = formatDate(fields.date.value);
+      views.time.textContent = fields.time.value.trim() || '时间待定';
+      views.location.textContent = fields.location.value.trim() || '地点待定';
+      views.locationNote.textContent = fields.locationNote.value.trim();
+      views.locationNote.style.display = fields.locationNote.value.trim() ? '' : 'none';
+
+      const activities = getSelectedActivities();
+      views.activities.innerHTML = activities.length
+        ? activities.map(item => `
+            <li class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-lavender-deep shrink-0"></span>
+              ${escapeHtml(item)}
+            </li>`).join('')
+        : '<li class="text-text-soft text-sm">项目待定</li>';
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    /* --- 确认预览弹窗内容 --- */
+    function renderConfirmPreview() {
+      const data = getInvitationData();
+      const activities = getSelectedActivities();
+      const activityHtml = activities.length
+        ? `<ul class="space-y-1 mt-1">${activities.map(a => `<li class="flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-lavender-deep"></span>${escapeHtml(a)}</li>`).join('')}</ul>`
+        : '<p class="text-text-soft mt-1">项目待定</p>';
+
+      confirmPreviewBody.innerHTML = `
+        <div class="flex gap-3">
+          <span class="text-lg">📅</span>
+          <div>
+            <p class="text-xs text-text-soft/70">约会日期</p>
+            <p class="text-text-deep font-medium">${escapeHtml(formatDate(data.date))}</p>
+            <p class="text-text-soft text-xs mt-0.5">${escapeHtml(data.time || '时间待定')}</p>
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <span class="text-lg">📍</span>
+          <div>
+            <p class="text-xs text-text-soft/70">见面地点</p>
+            <p class="text-text-deep font-medium">${escapeHtml(data.location || '地点待定')}</p>
+            ${data.locationNote ? `<p class="text-text-soft text-xs mt-0.5">${escapeHtml(data.locationNote)}</p>` : ''}
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <span class="text-lg">🌸</span>
+          <div class="flex-1">
+            <p class="text-xs text-text-soft/70">约会项目</p>
+            ${activityHtml}
+          </div>
+        </div>`;
+    }
+
+    function openShareModal() {
+      shareLinkInput.value = buildShareUrl();
+      openModal('modalShare');
+    }
+
+    async function copyShareLink() {
+      const url = shareLinkInput.value;
+      try {
+        await navigator.clipboard.writeText(url);
+        btnCopyLink.textContent = '已复制 ✓';
+        setTimeout(() => { btnCopyLink.textContent = '复制链接'; }, 2000);
+      } catch (_) {
+        shareLinkInput.select();
+        document.execCommand('copy');
+        btnCopyLink.textContent = '已复制 ✓';
+        setTimeout(() => { btnCopyLink.textContent = '复制链接'; }, 2000);
+      }
+    }
+
+    async function nativeShare() {
+      const url = shareLinkInput.value;
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: '和我赴一场晚霞约会吧',
+            text: '收到一份约会邀请，快来看看～',
+            url,
+          });
+        } catch (err) {
+          if (err.name !== 'AbortError') copyShareLink();
+        }
+      } else {
+        copyShareLink();
+      }
+    }
+
+    /* --- 保存 / 读取本地缓存（仅创建者模式） --- */
+    function saveFields() {
+      if (isSharedMode) return;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(getInvitationData()));
+    }
+
+    function loadFields() {
+      if (isSharedMode) return;
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (saved) applyInvitationData(saved);
+      } catch (_) { /* 忽略损坏缓存 */ }
+    }
+
+    /* --- 确认 & 分享按钮 --- */
+    btnConfirm.addEventListener('click', () => {
+      renderConfirmPreview();
+      openModal('modalConfirmPreview');
+    });
+
+    btnShare.addEventListener('click', openShareModal);
+    btnConfirmClose.addEventListener('click', () => closeModal('modalConfirmPreview'));
+    btnConfirmToShare.addEventListener('click', () => {
+      closeModal('modalConfirmPreview');
+      openShareModal();
+    });
+    btnCopyLink.addEventListener('click', copyShareLink);
+    btnShareNative.addEventListener('click', nativeShare);
+    btnShareClose.addEventListener('click', () => closeModal('modalShare'));
+
+    /* 系统分享按钮：不支持时隐藏 */
+    if (!navigator.share) {
+      btnShareNative.style.display = 'none';
+    }
+
+    Object.values(fields).forEach(el => {
+      el.addEventListener('input', () => {
+        syncPreview();
+        saveFields();
+      });
+    });
+
+    Object.values(activityChecks).forEach(el => {
+      el.addEventListener('change', () => {
+        syncCustomActivityInput();
+        syncPreview();
+        saveFields();
+        if (el === activityChecks.custom && activityChecks.custom.checked) {
+          inputCustomActivity.focus();
+        }
+      });
+    });
+
+    inputCustomActivity.addEventListener('input', () => {
+      syncPreview();
+      saveFields();
+    });
+
+    /* --- 页面初始化 --- */
+    if (!parseShareFromUrl()) {
+      fields.date.value = '';
+      loadFields();
+      syncCustomActivityInput();
+      syncPreview();
+    }
+
+    /* --- 答应约会：星星动画 + 弹窗 --- */
+    function handleAccept() {
+      createStarRain();
+      openModal('modalAccept');
+    }
+
+    btnAccept.addEventListener('click', handleAccept);
+
+    /* --- 拒绝约会：按钮晃动 + 挽留弹窗 --- */
+    btnReject.addEventListener('click', () => {
+      btnReject.classList.remove('btn-shake');
+      // 强制重绘以重启动画
+      void btnReject.offsetWidth;
+      btnReject.classList.add('btn-shake');
+      setTimeout(() => openModal('modalReject'), 300);
+    });
+
+    /* --- 满屏飘落星星 --- */
+    function createStarRain() {
+      starContainer.innerHTML = '';
+      const count = 60;
+
+      for (let i = 0; i < count; i++) {
+        const star = document.createElement('span');
+        star.className = 'star-particle';
+        star.textContent = starSymbols[Math.floor(Math.random() * starSymbols.length)];
+        star.style.left = Math.random() * 100 + 'vw';
+        star.style.animationDuration = (3 + Math.random() * 4) + 's';
+        star.style.animationDelay = Math.random() * 2 + 's';
+        star.style.fontSize = (0.8 + Math.random() * 1.2) + 'rem';
+        star.style.color = ['#A78BFA', '#C4B5FD', '#F472B6', '#FBBF24'][Math.floor(Math.random() * 4)];
+        starContainer.appendChild(star);
+      }
+
+      // 动画结束后清理
+      setTimeout(() => { starContainer.innerHTML = ''; }, 8000);
+    }
+
+    /* --- 弹窗控制 --- */
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // 点击遮罩关闭弹窗
+    ['modalAccept', 'modalReject', 'modalConfirmPreview', 'modalShare'].forEach(id => {
+      document.getElementById(id).addEventListener('click', (e) => {
+        if (e.target.id === id) closeModal(id);
+      });
+    });
+  </script>
+</body>
+</html>
