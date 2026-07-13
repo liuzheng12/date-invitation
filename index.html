@@ -557,7 +557,7 @@
     </div>
   </div>
 
-  <!-- ========== 弹窗：拒绝挽留 ========== -->
+  <!-- ========== 弹窗：拒绝挽留（仅一个按钮） ========== -->
   <div id="modalReject" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/20 backdrop-blur-sm">
     <div class="modal-content glass-card rounded-3xl p-8 sm:p-10 max-w-sm w-full text-center">
       <div class="text-4xl mb-4">🥺</div>
@@ -568,20 +568,13 @@
         可以有很多很多个。<br>
         <span class="text-lavender-deep">再给我一次机会嘛～</span>
       </p>
-      <div class="flex gap-3 justify-center">
-        <button
-          onclick="closeModal('modalReject'); setResponse('accepted'); handleAccept();"
-          class="btn-interactive py-3 px-6 rounded-xl bg-gradient-to-r from-lavender-deep to-lavender text-white text-sm font-medium"
-        >
-          好吧，我去！
-        </button>
-        <button
-          onclick="closeModal('modalReject'); setResponse('rejected');"
-          class="btn-interactive py-3 px-6 rounded-xl bg-white/80 text-text-soft text-sm border border-lavender/30"
-        >
-          下次再说
-        </button>
-      </div>
+      <button
+        id="btnRejectAgree"
+        type="button"
+        class="btn-interactive w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-lavender-deep to-lavender text-white text-sm font-medium"
+      >
+        好吧，我同意
+      </button>
     </div>
   </div>
 
@@ -592,6 +585,7 @@
     const btnReject = document.getElementById('btnReject');
     const btnConfirm = document.getElementById('btnConfirm');
     const btnRejectCreator = document.getElementById('btnRejectCreator');
+    const btnRejectAgree = document.getElementById('btnRejectAgree');
     const btnAcceptModalClose = document.getElementById('btnAcceptModalClose');
     const btnClear = document.getElementById('btnClear');
     const btnConfirmClose = document.getElementById('btnConfirmClose');
@@ -1048,8 +1042,20 @@
     }
 
     btnReject.addEventListener('click', () => {
-      setResponse('rejected');
       handleRejectClick(btnReject);
+    });
+
+    btnRejectAgree.addEventListener('click', () => {
+      closeModal('modalReject');
+      setResponse('accepted');
+      if (isSharedMode) {
+        pendingShareAfterAccept = false;
+        handleAccept();
+      } else {
+        pendingShareAfterAccept = true;
+        createStarRain();
+        openModal('modalAccept');
+      }
     });
 
     /* --- 满屏飘落星星 --- */
