@@ -406,13 +406,20 @@
     </p>
 
     <!-- ========== 创建者操作 ========== -->
-    <section class="creator-only mb-4">
+    <section class="creator-only mb-4 space-y-3">
       <button
         id="btnConfirm"
         type="button"
         class="btn-interactive w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-lavender-deep to-lavender text-white font-medium text-sm shadow-lg shadow-lavender/25"
       >
         ✨ 答应约会并分享给对方
+      </button>
+      <button
+        id="btnRejectCreator"
+        type="button"
+        class="btn-interactive w-full py-3.5 px-6 rounded-2xl bg-white/80 text-text-soft font-medium text-sm border border-lavender/30 hover:bg-white hover:border-lavender/50"
+      >
+        再想想…
       </button>
     </section>
 
@@ -541,7 +548,8 @@
         我会带着晚霞和星星，在约定的地方等你。
       </p>
       <button
-        onclick="closeModal('modalAccept')"
+        id="btnAcceptModalClose"
+        type="button"
         class="btn-interactive py-3 px-8 rounded-xl bg-gradient-to-r from-lavender-deep to-lavender text-white text-sm font-medium"
       >
         好呀 ♡
@@ -583,6 +591,8 @@
     const btnAccept = document.getElementById('btnAccept');
     const btnReject = document.getElementById('btnReject');
     const btnConfirm = document.getElementById('btnConfirm');
+    const btnRejectCreator = document.getElementById('btnRejectCreator');
+    const btnAcceptModalClose = document.getElementById('btnAcceptModalClose');
     const btnClear = document.getElementById('btnClear');
     const btnConfirmClose = document.getElementById('btnConfirmClose');
     const btnConfirmToShare = document.getElementById('btnConfirmToShare');
@@ -625,6 +635,7 @@
 
     let currentResponse = { status: null, at: null };
     let isSharedMode = false;
+    let pendingShareAfterAccept = false;
     const STORAGE_KEY = 'dateInvitationDetails_v3';
 
     const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
@@ -952,9 +963,21 @@
 
     /* --- 确认 & 分享按钮 --- */
     btnConfirm.addEventListener('click', () => {
-      renderConfirmPreview();
-      openModal('modalConfirmPreview');
+      pendingShareAfterAccept = true;
+      createStarRain();
+      openModal('modalAccept');
     });
+
+    btnAcceptModalClose.addEventListener('click', () => {
+      closeModal('modalAccept');
+      if (pendingShareAfterAccept) {
+        pendingShareAfterAccept = false;
+        openShareModal(false);
+      }
+    });
+
+    btnRejectCreator.addEventListener('click', () => handleRejectClick(btnRejectCreator));
+
     btnClear.addEventListener('click', () => {
       if (confirm('确定清除所有已填内容吗？')) clearFilledContent();
     });
@@ -1011,16 +1034,22 @@
       openModal('modalAccept');
     }
 
-    btnAccept.addEventListener('click', handleAccept);
+    btnAccept.addEventListener('click', () => {
+      pendingShareAfterAccept = false;
+      handleAccept();
+    });
 
     /* --- 拒绝约会：按钮晃动 + 挽留弹窗 --- */
+    function handleRejectClick(btn) {
+      btn.classList.remove('btn-shake');
+      void btn.offsetWidth;
+      btn.classList.add('btn-shake');
+      setTimeout(() => openModal('modalReject'), 300);
+    }
+
     btnReject.addEventListener('click', () => {
       setResponse('rejected');
-      btnReject.classList.remove('btn-shake');
-      // 强制重绘以重启动画
-      void btnReject.offsetWidth;
-      btnReject.classList.add('btn-shake');
-      setTimeout(() => openModal('modalReject'), 300);
+      handleRejectClick(btnReject);
     });
 
     /* --- 满屏飘落星星 --- */
