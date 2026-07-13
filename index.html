@@ -257,9 +257,20 @@
     .recipient-only { display: none; }
     body.shared-mode .creator-only { display: none; }
     body.shared-mode .recipient-only { display: block; }
-    body.shared-mode .edit-only { display: none; }
-    body.shared-mode .view-only { display: block; }
+    body.shared-mode.has-response .edit-only { display: none; }
+    body.shared-mode.has-response .view-only { display: block; }
+    body.shared-mode.has-response .recipient-only { display: none; }
+    body.shared-mode.no-response .edit-only { display: block; }
+    body.shared-mode.no-response .view-only { display: none; }
     body.shared-mode .detail-item:hover { transform: none; }
+
+    /* 对方回应展示条 */
+    .response-banner {
+      display: none;
+    }
+    body.shared-mode.has-response .response-banner {
+      display: block;
+    }
 
     /* 分享链接输入框 */
     .share-link-input {
@@ -292,6 +303,13 @@
       </h1>
       <div class="divider w-24 mx-auto mt-5"></div>
     </header>
+
+    <!-- 【对方回应】打开含回应的分享链接时显示 -->
+    <section id="responseBanner" class="response-banner glass-card rounded-3xl p-5 sm:p-6 mb-6 text-center">
+      <p class="text-xs tracking-widest text-lavender-deep/80 mb-2">— 对方回应 —</p>
+      <p id="responseStatusText" class="text-lg font-medium text-text-deep mb-1"></p>
+      <p id="responseTimeText" class="text-text-soft/60 text-xs"></p>
+    </section>
 
     <!-- 【修改文字】开篇温柔短句 -->
     <section class="glass-card rounded-3xl p-6 sm:p-8 mb-6 text-center">
@@ -383,31 +401,22 @@
     </section>
 
     <p id="editHint" class="creator-only text-center text-text-soft/50 text-xs mb-6">
-      填写完成后点击「确认」预览，再点「分享」生成链接发给 TA ♡
+      填写完成后点击「答应约会并分享给对方」，生成链接发给 TA ♡
     </p>
 
-    <!-- ========== 创建者操作：确认 & 分享 ========== -->
+    <!-- ========== 创建者操作 ========== -->
     <section class="creator-only mb-8">
-      <div class="flex flex-col sm:flex-row gap-3">
-        <button
-          id="btnConfirm"
-          type="button"
-          class="btn-interactive flex-1 py-3.5 px-6 rounded-2xl bg-gradient-to-r from-lavender-deep to-lavender text-white font-medium text-sm shadow-lg shadow-lavender/25"
-        >
-          ✓ 确认
-        </button>
-        <button
-          id="btnShare"
-          type="button"
-          class="btn-interactive flex-1 py-3.5 px-6 rounded-2xl bg-white/85 text-lavender-deep font-medium text-sm border border-lavender/40 hover:bg-white"
-        >
-          🔗 分享
-        </button>
-      </div>
+      <button
+        id="btnConfirm"
+        type="button"
+        class="btn-interactive w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-lavender-deep to-lavender text-white font-medium text-sm shadow-lg shadow-lavender/25"
+      >
+        ✨ 答应约会并分享给对方
+      </button>
     </section>
 
     <!-- ========== 被分享者：选择交互区 ========== -->
-    <section class="recipient-only mt-auto mb-0">
+    <section class="recipient-only mt-auto mb-4">
       <p class="text-center text-text-soft text-sm mb-5">你的答案是…？</p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
         <!-- 答应约会按钮 -->
@@ -425,6 +434,18 @@
           再想想…
         </button>
       </div>
+    </section>
+
+    <!-- ========== 被分享者：分享回应 ========== -->
+    <section class="recipient-only mb-8">
+      <p class="text-center text-text-soft/50 text-xs mb-3">填写或选择后，点分享把回应发回去 ♡</p>
+      <button
+        id="btnShareReply"
+        type="button"
+        class="btn-interactive w-full py-3.5 px-6 rounded-2xl bg-white/85 text-lavender-deep font-medium text-sm border border-lavender/40 hover:bg-white"
+      >
+        🔗 分享我的回应
+      </button>
     </section>
 
     <!-- 页脚 -->
@@ -462,7 +483,7 @@
   <div id="modalShare" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center px-6 bg-black/20 backdrop-blur-sm">
     <div class="modal-content glass-card rounded-3xl p-6 sm:p-8 max-w-sm w-full">
       <h3 class="text-center text-lg font-medium text-text-deep mb-1">分享邀请函</h3>
-      <p class="text-center text-text-soft/60 text-xs mb-4">复制链接发给 TA，对方打开即可看到内容</p>
+      <p id="shareModalHint" class="text-center text-text-soft/60 text-xs mb-4">复制链接发给 TA，对方打开即可看到内容</p>
       <input
         id="shareLinkInput"
         type="text"
@@ -530,13 +551,13 @@
       </p>
       <div class="flex gap-3 justify-center">
         <button
-          onclick="closeModal('modalReject'); handleAccept();"
+          onclick="closeModal('modalReject'); setResponse('accepted'); handleAccept();"
           class="btn-interactive py-3 px-6 rounded-xl bg-gradient-to-r from-lavender-deep to-lavender text-white text-sm font-medium"
         >
           好吧，我去！
         </button>
         <button
-          onclick="closeModal('modalReject')"
+          onclick="closeModal('modalReject'); setResponse('rejected');"
           class="btn-interactive py-3 px-6 rounded-xl bg-white/80 text-text-soft text-sm border border-lavender/30"
         >
           下次再说
@@ -551,15 +572,16 @@
     const btnAccept = document.getElementById('btnAccept');
     const btnReject = document.getElementById('btnReject');
     const btnConfirm = document.getElementById('btnConfirm');
-    const btnShare = document.getElementById('btnShare');
     const btnConfirmClose = document.getElementById('btnConfirmClose');
     const btnConfirmToShare = document.getElementById('btnConfirmToShare');
     const btnCopyLink = document.getElementById('btnCopyLink');
     const btnShareNative = document.getElementById('btnShareNative');
     const btnShareClose = document.getElementById('btnShareClose');
     const confirmPreviewBody = document.getElementById('confirmPreviewBody');
-    const shareLinkInput = document.getElementById('shareLinkInput');
-    const starContainer = document.getElementById('starContainer');
+    const btnShareReply = document.getElementById('btnShareReply');
+    const shareModalHint = document.getElementById('shareModalHint');
+    const responseStatusText = document.getElementById('responseStatusText');
+    const responseTimeText = document.getElementById('responseTimeText');
 
     const fields = {
       date: document.getElementById('inputDate'),
@@ -586,15 +608,34 @@
       activities: document.getElementById('viewActivities'),
     };
 
-    const STORAGE_KEY = 'dateInvitationDetails_v3';
+    const shareLinkInput = document.getElementById('shareLinkInput');
+    const starContainer = document.getElementById('starContainer');
+
+    let currentResponse = { status: null, at: null };
     let isSharedMode = false;
+    const STORAGE_KEY = 'dateInvitationDetails_v3';
 
     const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
     /* --- 星星符号池 --- */
     const starSymbols = ['✦', '✧', '★', '☆', '✨', '♡', '🌸'];
 
-    /* --- 收集 / 应用邀请函数据 --- */
+    /* --- 收集 / 应用分享数据（含对方回应） --- */
+    function getSharePayload() {
+      return {
+        invite: getInvitationData(),
+        response: {
+          status: currentResponse.status,
+          at: currentResponse.at,
+        },
+      };
+    }
+
+    function normalizePayload(data) {
+      if (data && data.invite) return data;
+      return { invite: data, response: { status: null, at: null } };
+    }
+
     function getInvitationData() {
       return {
         date: fields.date.value,
@@ -611,6 +652,16 @@
           customText: inputCustomActivity.value.trim(),
         },
       };
+    }
+
+    function applySharePayload(data) {
+      const payload = normalizePayload(data);
+      applyInvitationData(payload.invite);
+      currentResponse = {
+        status: payload.response?.status || null,
+        at: payload.response?.at || null,
+      };
+      renderResponseBanner();
     }
 
     function applyInvitationData(data) {
@@ -647,7 +698,7 @@
     }
 
     function buildShareUrl(data) {
-      const payload = encodeSharePayload(data || getInvitationData());
+      const payload = encodeSharePayload(data || getSharePayload());
       const base = location.href.split('#')[0];
       return `${base}#invite=${payload}`;
     }
@@ -660,7 +711,7 @@
       if (!invite) return false;
 
       try {
-        applyInvitationData(decodeSharePayload(invite));
+        applySharePayload(decodeSharePayload(invite));
         enterSharedMode();
         return true;
       } catch (_) {
@@ -668,10 +719,51 @@
       }
     }
 
+    function setResponse(status) {
+      currentResponse = {
+        status,
+        at: new Date().toISOString(),
+      };
+      renderResponseBanner();
+    }
+
+    function renderResponseBanner() {
+      if (!currentResponse.status) {
+        document.body.classList.remove('has-response');
+        document.body.classList.add('no-response');
+        return;
+      }
+
+      document.body.classList.remove('no-response');
+      document.body.classList.add('has-response');
+
+      const statusMap = {
+        accepted: { text: '✨ 答应了约会', emoji: '🌅' },
+        rejected: { text: '🥺 还在考虑中', emoji: '💭' },
+      };
+      const info = statusMap[currentResponse.status] || { text: '已回应', emoji: '💌' };
+      responseStatusText.textContent = info.text;
+
+      if (currentResponse.at) {
+        const d = new Date(currentResponse.at);
+        responseTimeText.textContent = `回应时间：${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      } else {
+        responseTimeText.textContent = '';
+      }
+    }
+
     function enterSharedMode() {
       isSharedMode = true;
       document.body.classList.add('shared-mode');
+      if (currentResponse.status) {
+        document.body.classList.add('has-response');
+        document.body.classList.remove('no-response');
+      } else {
+        document.body.classList.add('no-response');
+        document.body.classList.remove('has-response');
+      }
       syncPreview();
+      renderResponseBanner();
     }
 
     /* --- 日期格式化 --- */
@@ -732,6 +824,16 @@
         ? `<ul class="space-y-1 mt-1">${activities.map(a => `<li class="flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-lavender-deep"></span>${escapeHtml(a)}</li>`).join('')}</ul>`
         : '<p class="text-text-soft mt-1">项目待定</p>';
 
+      const responseHtml = currentResponse.status
+        ? `<div class="flex gap-3 pt-2 border-t border-lavender/20">
+            <span class="text-lg">💌</span>
+            <div>
+              <p class="text-xs text-text-soft/70">对方回应</p>
+              <p class="text-text-deep font-medium">${escapeHtml(currentResponse.status === 'accepted' ? '答应约会 ✨' : '还在考虑 🥺')}</p>
+            </div>
+          </div>`
+        : '';
+
       confirmPreviewBody.innerHTML = `
         <div class="flex gap-3">
           <span class="text-lg">📅</span>
@@ -755,11 +857,15 @@
             <p class="text-xs text-text-soft/70">约会项目</p>
             ${activityHtml}
           </div>
-        </div>`;
+        </div>
+        ${responseHtml}`;
     }
 
-    function openShareModal() {
+    function openShareModal(isReplyShare = false) {
       shareLinkInput.value = buildShareUrl();
+      shareModalHint.textContent = isReplyShare
+        ? '复制此链接发回去，对方打开即可看到你的填写和回应'
+        : '复制链接发给 TA，对方填写或回应后再分享回来';
       openModal('modalShare');
     }
 
@@ -813,8 +919,7 @@
       renderConfirmPreview();
       openModal('modalConfirmPreview');
     });
-
-    btnShare.addEventListener('click', openShareModal);
+    btnShareReply.addEventListener('click', () => openShareModal(true));
     btnConfirmClose.addEventListener('click', () => closeModal('modalConfirmPreview'));
     btnConfirmToShare.addEventListener('click', () => {
       closeModal('modalConfirmPreview');
@@ -862,6 +967,7 @@
 
     /* --- 答应约会：星星动画 + 弹窗 --- */
     function handleAccept() {
+      setResponse('accepted');
       createStarRain();
       openModal('modalAccept');
     }
@@ -870,6 +976,7 @@
 
     /* --- 拒绝约会：按钮晃动 + 挽留弹窗 --- */
     btnReject.addEventListener('click', () => {
+      setResponse('rejected');
       btnReject.classList.remove('btn-shake');
       // 强制重绘以重启动画
       void btnReject.offsetWidth;
